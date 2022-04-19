@@ -1,15 +1,7 @@
-
--- Generation.lua
-
--- Implements the commands from the Generation category
-
-
-
-
+-- generation.lua
+-- Implements generation-related commands.
 
 function HandleGenerationShapeCommand(a_Split, a_Player)
-	-- //generate <block> <formula>
-
 	local IsHollow     = false
 	local UseRawCoords = false
 	local Offset       = false
@@ -32,29 +24,28 @@ function HandleGenerationShapeCommand(a_Split, a_Player)
 	end
 
 	if ((a_Split[2 + NumFlags] == nil) or (a_Split[3 + NumFlags] == nil)) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.")
-		a_Player:SendMessage(cChatColor.Rose .. "//generate [Flags] <block> <formula>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //generate [flags] <block> <formula>")
 		return true
 	end
 
-	-- Check the selection:
+	-- Check the selection...
 	local State = GetPlayerState(a_Player)
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No region set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find any region to generate within.")
 		return true
 	end
 
 	local BlockTable, ErrBlock = GetBlockDst(a_Split[2 + NumFlags], a_Player)
 	if not(BlockTable) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
-	-- Get the selected area
+	-- Get the selected area.
 	local SrcCuboid = State.Selection:GetSortedCuboid()
 	local World = a_Player:GetWorld()
 
-	-- Expand the area in all directions. Otherwise we get some weird results at the sides
+	-- Expand the area in all directions. Otherwise, we get some weird results at the sides.
 	SrcCuboid:Expand(1, 1, 1, 1, 1, 1)
 	SrcCuboid:ClampY(0, 255)
 	SrcCuboid:Sort()
@@ -63,7 +54,7 @@ function HandleGenerationShapeCommand(a_Split, a_Player)
 
 	local zero, unit
 
-	-- Read the selected cuboid into a cBlockArea:
+	-- Read the selected cuboid into a cBlockArea...
 	local BA = cBlockArea()
 	BA:Read(World, SrcCuboid)
 
@@ -72,7 +63,7 @@ function HandleGenerationShapeCommand(a_Split, a_Player)
 	SizeY = SizeY - 1
 	SizeZ = SizeZ - 1
 
-	-- Get the proper zero and unit values
+	-- Get the proper zero and unit values.
 	if (UseRawCoords) then
 		zero = Vector3f(0, 0, 0)
 		unit = Vector3f(1, 1, 1)
@@ -80,20 +71,16 @@ function HandleGenerationShapeCommand(a_Split, a_Player)
 		zero = Vector3f(SrcCuboid.p1) - Vector3f(a_Player:GetPosition())
 		unit = Vector3f(1, 1, 1)
 	elseif (OffsetCenter) then
-		-- The lowest coordinate in the region
-		local Min = Vector3f(0, 0, 0)
+		local Min = Vector3f(0, 0, 0) -- The lowest coordinate in the region, Min.
 
-		-- The highest coordinate in the region.
-		local Max = Vector3f(SizeX, SizeY, SizeZ)
+		local Max = Vector3f(SizeX, SizeY, SizeZ) -- The highest coordinate in the region, Max.
 
 		zero = (Max + Min) * 0.5
 		unit = Vector3f(1, 1, 1)
 	else
-		-- The lowest coordinate in the region
-		local Min = Vector3f(0, 0, 0)
+		local Min = Vector3f(0, 0, 0) -- The lowest coordinate in the region, Min.
 
-		-- The highest coordinate in the region.
-		local Max = Vector3f(SizeX, SizeY, SizeZ)
+		local Max = Vector3f(SizeX, SizeY, SizeZ) -- The highest coordinate in the region, Max.
 
 		zero = (Max + Min) * 0.5
 		unit = Max - zero
@@ -101,86 +88,81 @@ function HandleGenerationShapeCommand(a_Split, a_Player)
 
 	local Expression = cExpression:new(FormulaString)
 
-	-- Create the shape generator
-	local ShapeGenerator, Error = cShapeGenerator:new(zero, unit, BlockTable, Expression, a_Player:HasPermission('worldedit.anyblock'))
+	-- Create the shape generator...
+	local ShapeGenerator, Error = cShapeGenerator:new(zero, unit, BlockTable, Expression, a_Player:HasPermission('edits.anyblock'))
 	if (not ShapeGenerator) then
 		-- Something went wrong while constructing the ShapeGenerator.
-		a_Player:SendMessage(cChatColor.Rose .. Error)
+		a_Player:SendMessage(cChatColor.LightGray .. Error)
 		return true
 	end
 
-	-- Check if other plugins want to block this action
+	-- Check if other plugins want to block this action.
 	if (CallHook("OnAreaChanging", SrcCuboid, a_Player, World, "generate")) then
 		return true
 	end
 
-	-- Push an undo snapshot:
+	-- Push an undo snapshot...
 	State.UndoStack:PushUndoFromCuboid(World, SrcCuboid, "generation")
 
-	-- Get the mask for the equipped item
+	-- Get the mask for the equipped item.
 	local Mask = State.ToolRegistrator:GetMask(a_Player:GetEquippedItem().m_ItemType)
 
-	-- Write the shape in the block area
+	-- Write the shape in the block area.
 	local Success, NumAffectedBlocks = pcall(cShapeGenerator.MakeShape, ShapeGenerator, BA, Vector3f(1, 1, 1), Vector3f(SizeX, SizeY, SizeZ), IsHollow, Mask)
 	if (not Success) then
-		a_Player:SendMessage(cChatColor.Rose .. NumAffectedBlocks:match(":%d-: (.+)"))
+		a_Player:SendMessage(cChatColor.LightGray .. NumAffectedBlocks:match(":%d-: (.+)"))
 		return true;
 	end
 
-	-- Send a message to the player with the number of changed blocks
-	a_Player:SendMessage(cChatColor.LightPurple .. NumAffectedBlocks .. " block(s) changed")
+	-- Send a message to the player with the number of changed blocks.
+	a_Player:SendMessage(cChatColor.LightGray .. "Modified " .. NumAffectedBlocks .. " block(s).")
 
-	-- Write the blockarea in the world
+	-- Write the blockarea in the world.
 	BA:Write(World, SrcCuboid.p1)
 
-	-- Notify other plugins that the shape is in the world
+	-- Notify other plugins that the shape is in the world.
 	CallHook("OnAreaChanged", SrcCuboid, a_Player, World, "generate")
 	return true
 end
 
-
-
-
-
-function HandleCylCommand(a_Split, a_Player)
+function HandleCylinderCommand(a_Split, a_Player)
 	-- //cyl <BlockType> <Radius> [Height]
 	-- //hcyl <BlockType> <Radius> [Height]
 
 	if ((a_Split[2] == nil) or (a_Split[3] == nil)) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.")
-		a_Player:SendMessage(cChatColor.Rose .. a_Split[1] .. " <block> <radius>[,<radius>] [height]")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <block> <radius>[,<radius>] [height]")
 		return true
 	end
 
 	-- Retrieve the blocktypes from the params:
 	local BlockTable, ErrBlock = GetBlockDst(a_Split[2], a_Player)
 	if not(BlockTable) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
 	local RadiusX, RadiusZ
 	local Radius = tonumber(a_Split[3])
 	if (Radius) then
-		-- Same radius for all axis
+		-- Same radius for all axes.
 		RadiusX, RadiusZ = Radius, Radius, Radius
 	else
 		-- The player might want to specify the radius for each axis.
 		local Radius = StringSplit(a_Split[3], ",")
 		if (#Radius == 1) then
-			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[3] .. "\" given.")
+			a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert that radius (" .. a_Split[3] .. ") to a number.")
 			return true
 		end
 
 		if (#Radius ~= 2) then
-			a_Player:SendMessage(cChatColor.Rose .. "You must specify 1 or 2 radius values")
+			a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert 2 radii; you must specify 1 or 3 values.")
 			return true
 		end
 
 		-- Check if the radius for all axis are numbers
 		for Idx = 1, 2 do
 			if (not tonumber(Radius[Idx])) then
-				a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. Radius[Idx] .. "\" given.")
+				a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert those radii (" .. Radius[Idx] .. ") to numbers.")
 				return true
 			end
 		end
@@ -195,21 +177,15 @@ function HandleCylCommand(a_Split, a_Player)
 	Cuboid:Expand(RadiusX, RadiusX, 0, Height, RadiusZ, RadiusZ)
 	Cuboid:Sort()
 
-	-- Create the sphere in the world
+	-- Create the sphere in the world.
 	local NumAffectedBlocks = CreateCylinderInCuboid(a_Player, Cuboid, BlockTable, a_Split[1] == "//hcyl")
 
-	-- Send a message to the player with the amount of affected blocks
-	a_Player:SendMessage(cChatColor.LightPurple .. NumAffectedBlocks .. " block(s) have been created.")
+	-- Send a message to the player with the amount of affected blocks.
+	a_Player:SendMessage(cChatColor.LightGray .. "Created " .. NumAffectedBlocks .. " block(s).")
 	return true
 end
 
-
-
-
-
 function HandleSphereCommand(a_Split, a_Player)
-	-- //sphere <BlockType> <Radius>
-	-- //hsphere <BlockType> <Radius>
 
 	if ((a_Split[2] == nil) or (a_Split[3] == nil)) then
 		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.")
@@ -217,35 +193,35 @@ function HandleSphereCommand(a_Split, a_Player)
 		return true
 	end
 
-	-- Retrieve the blocktypes from the params:
+	-- Retrieve the blocktypes from the params...
 	local BlockTable, ErrBlock = GetBlockDst(a_Split[2], a_Player)
 	if not(BlockTable) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
 	local RadiusX, RadiusY, RadiusZ
 	local Radius = tonumber(a_Split[3])
 	if (Radius) then
-		-- Same radius for all axis
+		-- Same radius for all axes.
 		RadiusX, RadiusY, RadiusZ = Radius, Radius, Radius
 	else
 		-- The player might want to specify the radius for each axis.
 		local Radius = StringSplit(a_Split[3], ",")
 		if (#Radius == 1) then
-			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[3] .. "\" given.")
+			a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert that radius (" .. a_Split[3] .. ") to a number.")
 			return true
 		end
 
 		if (#Radius ~= 3) then
-			a_Player:SendMessage(cChatColor.Rose .. "You must specify 1 or 3 radius values")
+			a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert 2 radii; you must specify 1 or 3 values.")
 			return true
 		end
 
-		-- Check if the radius for all axis are numbers
+		-- Check if the radius for all axis are numbers.
 		for Idx = 1, 3 do
 			if (not tonumber(Radius[Idx])) then
-				a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. Radius[Idx] .. "\" given.")
+				a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert those radii (" .. Radius[Idx] .. ") to numbers.")
 				return true
 			end
 		end
@@ -259,11 +235,11 @@ function HandleSphereCommand(a_Split, a_Player)
 	Cuboid:Expand(RadiusX, RadiusX, RadiusY, RadiusY, RadiusZ, RadiusZ)
 	Cuboid:Sort()
 
-	-- Create the sphere in the world
+	-- Create the sphere in the world.
 	local NumAffectedBlocks = CreateSphereInCuboid(a_Player, Cuboid, BlockTable, a_Split[1] == "//hsphere")
 
-	-- Send a message to the player with the amount of affected blocks
-	a_Player:SendMessage(cChatColor.LightPurple .. NumAffectedBlocks .. " block(s) have been created.")
+	-- Send a message to the player with the amount of affected blocks.
+	a_Player:SendMessage(cChatColor.LightGray .. "Created " .. NumAffectedBlocks .. " block(s).")
 	return true
 end
 

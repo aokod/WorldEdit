@@ -1,32 +1,27 @@
+-- brush.lua
+-- Implements handlers for brush-related commands.
 
--- cmd_Brush.lua
-
--- Implements command handlers for the brush commands
-
-
-
-
+function HandleBrushMainCommand(a_Split, a_Player)
+	a_Player:SendMessage(cChatColor.LightGray .. "Usage: //brush <cylinder [...] | sphere [...]>")
+	return true
+end
 
 function HandleMaskCommand(a_Split, a_Player)
-	-- /mask <Blocks>
-
 	if (#a_Split == 1) then
-		-- Remove mask
 		local State = GetPlayerState(a_Player)
 		local Succes, error = State.ToolRegistrator:UnbindMask(a_Player:GetEquippedItem().m_ItemType)
 
 		if (not Succes) then
-			a_Player:SendMessage(cChatColor.Rose .. error)
+			a_Player:SendMessage(cChatColor.LightGray .. error)
 			return true
 		end
-		a_Player:SendMessage(cChatColor.LightPurple .. "Brush mask disabled.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Disabled your brush mask.")
 		return true
 	end
 
-	-- Retrieve the blocktypes from the params:
 	local Mask, ErrBlock = cMask:new(a_Split[2])
 	if not(Mask) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
@@ -34,22 +29,16 @@ function HandleMaskCommand(a_Split, a_Player)
 	local Succes, error = State.ToolRegistrator:BindMask(a_Player:GetEquippedItem().m_ItemType, Mask)
 
 	if (not Succes) then
-		a_Player:SendMessage(cChatColor.Rose .. error)
+		a_Player:SendMessage(cChatColor.LightGray .. error)
 		return true
 	end
-	a_Player:SendMessage(cChatColor.LightPurple .. "Brush mask set.")
+	a_Player:SendMessage(cChatColor.LightPurple .. "Set your brush mask.")
 	return true
 end
 
-
-
-
-
 function HandleSphereBrush(a_Split, a_Player)
-	-- //brush sphere [-h] <Block> <Radius>
-
 	if (#a_Split < 4) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: /brush sphere [-h] <Block> <Radius>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //brush sphere [-h] <block> <radius>")
 		return true
 	end
 
@@ -59,27 +48,26 @@ function HandleSphereBrush(a_Split, a_Player)
 		table.remove(a_Split, 3)
 	end
 
-	-- Retrieve the blocktypes from the params:
 	local BlockTable, ErrBlock = GetBlockDst(a_Split[3], a_Player)
 	if not(BlockTable) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
-	-- Convert the Radius param:
+	-- The radius isn't numeric.
 	local Radius = tonumber(a_Split[4])
 	if not(Radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Cannot convert radius \"" .. a_Split[4] .. "\" to a number.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert that radius (" .. a_Split[4] .. ") to a number.")
 		return true
 	end
 
-	-- The radius is too large
+	-- The radius exceeds MaxBrushRadius.
 	if (Radius > g_Config.Limits.MaxBrushRadius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Maximum brush radius: " .. g_Config.Limits.MaxBrushRadius)
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert a radius over the limit of " .. g_Config.Limits.MaxBrushRadius .. ".")
 		return true
 	end
 
-	-- The player state is used to get the player's mask, and to bind the tool
+	-- The player state is used to get the player's mask, and to bind the tool.
 	local State = GetPlayerState(a_Player)
 
 	-- Initialize the handler.
@@ -107,19 +95,13 @@ function HandleSphereBrush(a_Split, a_Player)
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Sphere brush shape equipped (" .. Radius .. ")")
+	a_Player:SendMessage(cChatColor.LightGray .. "Equipped a sphere brush shape of " .. Radius .. ".")
 	return true
 end
 
-
-
-
-
 function HandleCylinderBrush(a_Split, a_Player)
-	-- //brush cyl [-h] <Block> <Radius> <Height>
-
 	if (#a_Split < 5) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: /brush cylinder [-h] <Block> <Radius> <Height>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //brush cylinder [-h] <block> <radius> <height>")
 		return true
 	end
 
@@ -132,34 +114,34 @@ function HandleCylinderBrush(a_Split, a_Player)
 	-- Retrieve the blocktypes from the params:
 	local BlockTable, ErrBlock = GetBlockDst(a_Split[3], a_Player)
 	if not(BlockTable) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
-	-- Convert the Radius param:
+	-- The radius isn't numeric.
 	local Radius = tonumber(a_Split[4])
 	if not(Radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Cannot convert radius \"" .. a_Split[4] .. "\" to a number.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert that radius (" .. a_Split[4] .. ") to a number.")
 		return true
 	end
 
-	-- The radius is too large
+	-- The radius exceeds MaxBrushRadius.
 	if (Radius > g_Config.Limits.MaxBrushRadius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Maximum brush radius: " .. g_Config.Limits.MaxBrushRadius)
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert a radius over the limit of " .. g_Config.Limits.MaxBrushRadius .. ".")
 		return true
 	end
 
 	-- Convert the height param.
 	local Height = tonumber(a_Split[5])
 	if not(Height) then
-		a_Player:SendMessage(cChatColor.Rose .. "Cannot convert height \"" .. a_Split[5] .. "\" to a number.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't convert that height (" .. a_Split[5] .. ") to a number.")
 		return true
 	end
 
-	-- The height used in the brush handler. If Height is negative we add one, if positive we lower by one
+	-- The height used in the brush handler. If Height is negative, add one; if positive, subtract one.
 	local UsedHeight = (Height > 0 and (Height - 1)) or (Height + 1)
 
-	-- The player state is used to get the player's mask, and to bind the tool
+	-- The player state is used to get the player's mask, and to bind the tool.
 	local State = GetPlayerState(a_Player)
 
 	-- Initialize the handler.
@@ -187,6 +169,6 @@ function HandleCylinderBrush(a_Split, a_Player)
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Cylinder brush shape equipped (" .. Radius .. " by " .. Height .. ")")
+	a_Player:SendMessage(cChatColor.LightGray .. "Equipped a cylinder brush shape of " .. Radius .. " x " .. Height .. ".")
 	return true
 end

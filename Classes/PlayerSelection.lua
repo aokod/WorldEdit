@@ -444,7 +444,7 @@ function cPlayerSelection:SetPos(a_BlockX, a_BlockY, a_BlockZ, a_BlockFace, a_Po
 	self.PlayerState:DoWithPlayer(
 		function(a_Player)
 			-- Check the WE permission:
-			if not(a_Player:HasPermission("worldedit.selection.pos")) then
+			if not(a_Player:HasPermission("edits.selection.pos")) then
 				Abort = true
 				return true
 			end

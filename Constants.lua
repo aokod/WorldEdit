@@ -1,14 +1,7 @@
+-- constants.lua
+-- Global variables used by the plugin.
 
--- Constants.lua
-
--- Contains global variables that WorldEdit reguraly uses.
-
-
-
-
-
---- Some blocks won't render if the meta value is 0.
--- Here we keep a list of all of them with the first allowed meta value.
+-- Some blocks won't render with a meta value of zero.
 -- Please keep the list alphasorted.
 g_DefaultMetas = {
 	[E_BLOCK_CHEST]              = 2,
@@ -24,10 +17,6 @@ g_DefaultMetas = {
 	[E_BLOCK_WALLSIGN]           = 2,
 	[E_BLOCK_WALL_BANNER]        = 2
 }
-
-
-
-
 
 E_DIRECTION_NORTH1 = 0
 E_DIRECTION_NORTH2 = 4

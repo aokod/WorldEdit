@@ -1,30 +1,28 @@
+-- schematic.lua
+-- Handlers for schematic-related commands.
 
--- cmd_schematic.lua
+function HandleSchematicMainCommand(a_Split, a_Player)
+	-- //schem
 
--- Command handlers for the "//schematic" subcommands
-
-
-
-
-function HandleSchematicFormatsCommand(a_Split, a_Player)
-	-- //schematic listformats
-
-	-- We support only one format, MCEdit:
-	a_Player:SendMessage(cChatColor.LightPurple .. 'Available formats: "MCEdit"')
+	a_Player:SendMessage(cChatColor.LightGray .. "Usage: //schem <download [...] | import [...] | load [...] | save [...]>")
 	return true
 end
 
+function HandleSchematicFormatsCommand(a_Split, a_Player)
+	-- //schem formats
 
-
-
+	-- We support only one format, MCEdit.
+	a_Player:SendMessage(cChatColor.LightGray .. "Formats (1): MCEdit")
+	return true
+end
 
 function HandleSchematicListCommand(a_Split, a_Player)
-	-- //schematic list
+	-- //schem list
 
-	-- Retrieve all the objects in the folder:
+	-- Retrieve all the objects in the folder.
 	local FolderContents = cFile:GetFolderContents("schematics")
 
-	-- Filter out non-files and non-".schematic" files:
+	-- Filter out non-files and non-".schematic" files.
 	local FileList = {}
 	for idx, fnam in ipairs(FolderContents) do
 		if (
@@ -40,48 +38,60 @@ function HandleSchematicListCommand(a_Split, a_Player)
 		end
 	)
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Available schematics: " .. table.concat(FileList, ", "))
+	a_Player:SendMessage(cChatColor.LightGray .. "Schematics (" .. #FileList .. "): " .. table.concat(FileList, ", "))
 	return true
 end
 
+function HandleSchematicDownloadCommand(a_Split, a_Player)
+	-- //schem download <filename>
 
-
-
-
-function HandleSchematicLoadCommand(a_Split, a_Player)
-	-- //schematic load <FileName>
-
-	-- Check the FileName parameter:
 	if (#a_Split ~= 3) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: /schematic load <FileName>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //schem download <filename>")
 		return true
 	end
 	local FileName = a_Split[3]
 
-	-- Check if the file exists:
 	local Path = "schematics/" .. FileName .. ".schematic"
 	if not(cFile:IsFile(Path)) then
-		a_Player:SendMessage(cChatColor.Rose .. FileName .. " schematic does not exist.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that schematic.")
 		return true
 	end
 
-	-- Load the file into clipboard:
-	local State = GetPlayerState(a_Player)
-	if not(State.Clipboard:LoadFromSchematicFile(Path)) then
-		a_Player:SendMessage(cChatColor.Rose .. FileName .. " schematic does not exist.")
-		return true
-	end
-	a_Player:SendMessage(cChatColor.LightPurple .. FileName .. " schematic was loaded into your clipboard.")
-	a_Player:SendMessage(cChatColor.LightPurple .. "Clipboard size: " .. State.Clipboard:GetSizeDesc())
+	-- Take them to the web server in order to download their schematic.
+	a_Player:SendMessage(cChatColor.LightGray .. "To download your schematic, go to: https://files.aedi.app/" .. Path)
 	return true
 end
 
+function HandleSchematicLoadCommand(a_Split, a_Player)
+	-- //schem load <filename>
 
+	-- Check the FileName parameter...
+	if (#a_Split ~= 3) then
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //schem load <filename>")
+		return true
+	end
+	local FileName = a_Split[3]
 
+	-- Check if the file exists.
+	local Path = "schematics/" .. FileName .. ".schematic"
+	if not(cFile:IsFile(Path)) then
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that schematic (" .. FileName .. ").")
+		return true
+	end
 
+	-- Load the file onto the clipboard.
+	local State = GetPlayerState(a_Player)
+	if not(State.Clipboard:LoadFromSchematicFile(Path)) then
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that schematic (" .. FileName .. ").")
+		return true
+	end
+	a_Player:SendMessage(cChatColor.LightGray .. "Loaded that schematic (" .. FileName .. ") onto your clipboard.")
+	a_Player:SendMessage(cChatColor.LightGray .. "Size: " .. State.Clipboard:GetSizeDesc() .. ".")
+	return true
+end
 
 function HandleSchematicSaveCommand(a_Split, a_Player)
-	-- //schematic save [<format>] <FileName>
+	-- //schem save [format] <filename>
 
 	-- Get the parameters from the command arguments:
 	local FileName
@@ -90,25 +100,25 @@ function HandleSchematicSaveCommand(a_Split, a_Player)
 	elseif (#a_Split == 3) then
 		FileName = a_Split[3]
 	else
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //schematic save [<format>] <FileName>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //schem save [format] <filename>")
 		return true
 	end
 
 	-- Check if there already is a schematic with that name, and if so if we are allowed to override it.
 	if (not g_Config.Schematics.OverrideExistingFiles and cFile:IsFile("schematics/" .. FileName .. ".schematic")) then
-		a_Player:SendMessage(cChatColor.Rose .. "There already is a schematic with that name.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't write to a filename that's already taken.")
 		return true
 	end
 
-	-- Check that there's data in the clipboard:
+	-- Check that there's data in the clipboard.
 	local State = GetPlayerState(a_Player)
 	if not(State.Clipboard:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "There's no data in the clipboard. Use //copy or //cut first.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find anything on your clipboard to save.")
 		return true
 	end
 
-	-- Save the clipboard:
+	-- Save the clipboard.
 	State.Clipboard:SaveToSchematicFile("schematics/" .. FileName .. ".schematic")
-	a_Player:SendMessage(cChatColor.LightPurple .. "Clipboard saved to " .. FileName .. ".")
+	a_Player:SendMessage(cChatColor.LightGray .. "Saved your clipboard as an operable schematic (" .. FileName .. ").")
 	return true
 end

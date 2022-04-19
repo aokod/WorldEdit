@@ -37,7 +37,7 @@ end
 function cToolRegistrator:BindAbsoluteTools()
 	local function RightClickCompassCallback(a_Player, _, _, _, a_BlockFace)
 		-- The player can't use the navigation tool because he doesn't have permission use it.
-		if (not a_Player:HasPermission("worldedit.navigation.thru.tool")) then
+		if (not a_Player:HasPermission("edits.navigation.thru.tool")) then
 			return false
 		end
 
@@ -52,7 +52,7 @@ function cToolRegistrator:BindAbsoluteTools()
 	local LastLeftClick = -math.huge
 	local function LeftClickCompassCallback(a_Player, _, _, _, a_BlockFace)
 		-- The player can't use the navigation tool because he doesn't have permission use it.
-		if (not a_Player:HasPermission("worldedit.navigation.jumpto.tool")) then
+		if (not a_Player:HasPermission("edits.navigation.jumpto.tool")) then
 			return false
 		end
 

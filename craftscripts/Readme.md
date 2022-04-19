@@ -1,2 +1,2 @@
-### WARNING! Only use scripts that you trust. Scripts are able to bypass the server's permission, change server settings and more.
-### Anyone with the worldedit.scripting.execute permission is able to execute them.
+### Before you add any scripts...
+Remember that you should never add scripts **you don't trust** because craftscripts have the capability to bypass permission settings and modify configurations.  By default, `edits.scripting.run` is granted to architects.

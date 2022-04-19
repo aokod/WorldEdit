@@ -1,17 +1,7 @@
-
--- Config.lua
-
--- Contains the functions to initialize and write the configuration file.
-
-
-
-
+-- config.lua
+-- Contains functions for initializing and writing a configuration.
 
 g_Config = {}
-
-
-
-
 
 -- Create an environment for the config loader where the admin can use item names directly without quotes.
 local g_LoaderEnv = {}
@@ -20,10 +10,6 @@ for Key, Value in pairs(_G) do
 		g_LoaderEnv[ItemTypeToString(Value)] = Value
 	end
 end
-
-
-
-
 
 local g_ConfigDefault =
 [[
@@ -49,11 +35,11 @@ NavigationWand =
 
 Scripting =
 {
-	-- If true it logs an error when a craftscript failed
+	-- If true, an error will be logged when a craftscript fails.
 	Debug = false,
 
 	-- The amount of seconds that a script may be active. Any longer and the script will be aborted.
-	-- If negative the time a script can run is unlimited.
+	-- If negative, the time a script can run is unlimited.
 	MaxExecutionTime = 5,
 },
 
@@ -72,34 +58,25 @@ Updates =
 
 Storage =
 {
-	-- If set to true the selection of a player will be remembered once he leaves.
+	-- If set to true, the selection of a player will be remembered once he leaves.
 	RememberPlayerSelection = true,
 
-	-- If WorldEdit needs to change a format in the database the database will be backuped first before changing.
+	-- If Edits needs to change a format in the database, the database will be backed up first before changing.
 	-- This doesn't mean when adding or removing data the database will be backed up. Only when the used database is outdated.
 	BackupDatabaseWhenUpdating = true,
 }
 ]]
 
-
-
-
-
--- Writes the default configuration to a_Path
 local function WriteDefaultConfiguration(a_Path)
-	LOGWARNING("Default configuration written to \"" .. a_Path .. "\"")
+	LOGWARNING("Wrote the default Edits configuration to \"" .. a_Path .. "\"")
 	local File = io.open(a_Path, "w")
 	File:write(g_ConfigDefault)
 	File:close()
 end
 
-
-
-
-
--- Returns the default configuration table. This can be directly used in g_Config
+-- Returns the default configuration table. This can be directly used in g_Config.
 local function GetDefaultConfigurationTable()
-	-- Load the default config
+	-- Loads the default config...
 	local Loader = loadstring("return {" .. g_ConfigDefault .. "}")
 
 	-- Apply the environment to the configloader.
@@ -108,19 +85,11 @@ local function GetDefaultConfigurationTable()
 	return Loader()
 end
 
-
-
-
-
--- Sets g_Config to the default configuration
+-- Sets g_Config to the default configuration.
 local function LoadDefaultConfiguration()
-	LOGWARNING("The default configuration will be used.")
+	LOGWARNING("The default Edits configuration will be used.")
 	g_Config = GetDefaultConfigurationTable()
 end
-
-
-
-
 
 -- Finds from an error message where the error occurred.
 local function FindErrorPosition(a_ErrorMessage)
@@ -128,15 +97,11 @@ local function FindErrorPosition(a_ErrorMessage)
 	return ErrorPosition
 end
 
-
-
-
-
 -- Loads the configuration from the given path. If it doesn't exist, or if there is an error in the config file it will load the defaults.
 function InitializeConfiguration(a_Path)
 	local ConfigContent = cFile:ReadWholeFile(a_Path)
 
-	-- The configuration file doesn't exist or is empty. Write and load the default value
+	-- The configuration file doesn't exist or is empty. Write and load the default value...
 	if (ConfigContent == "") then
 		WriteDefaultConfiguration(a_Path)
 		LoadDefaultConfiguration()
@@ -144,23 +109,23 @@ function InitializeConfiguration(a_Path)
 	end
 
 	-- Load the content of the config file. Place brackets around it to make the whole thing a table.
-	-- Also, return the table when executed
+	-- Also, return the table when executed.
 	local ConfigLoader, Error = loadstring("return {" .. ConfigContent .. "}")
 	if (not ConfigLoader) then
 		local ErrorPosition = FindErrorPosition(Error)
-		LOGWARNING("Error in the configuration file near line " .. ErrorPosition)
+		LOGWARNING("Found an error in the Edits configuration near (line) " .. ErrorPosition)
 		LoadDefaultConfiguration()
 		return
 	end
 
-	-- Apply the environment to the configloader.
+	-- Apply the environment to the ConfigLoader.
 	setfenv(ConfigLoader, g_LoaderEnv)
 
 	-- Execute the loader. It returns true + the configuration if it executed properly. Else it returns false with the error message.
 	local Succes, Result = pcall(ConfigLoader)
 	if (not Succes) then
 		local ErrorPosition = FindErrorPosition(Result)
-		LOGWARNING("Error in the configuration file at line " .. ErrorPosition)
+		LOGWARNING("Found an error in the Edits configuration near (line) " .. ErrorPosition)
 		LoadDefaultConfiguration()
 		return
 	end

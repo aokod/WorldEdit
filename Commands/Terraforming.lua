@@ -1,19 +1,13 @@
-
--- Terraforming.lua
-
--- Contains all the command handlers for the category Terraforming
-
-
-
-
+-- terraforming.lua
+-- Handlers for terraforming commands.
 
 function HandleDrainCommand(a_Split, a_Player)
 	-- //drain <radius>
 
-	-- Check the radius parameter:
+	-- Check the radius parameter.
 	local Radius = tonumber(a_Split[2] or "")
 	if (Radius == nil) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //drain <radius>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <radius>")
 		return true
 	end
 
@@ -25,24 +19,24 @@ function HandleDrainCommand(a_Split, a_Player)
 
 	local World = a_Player:GetWorld()
 
-	-- Check if other plugins want to block this action
+	-- Check if other plugins want to block this action.
 	if (CallHook("OnAreaChanging", Cuboid, a_Player, World, "drain")) then
 		return true
 	end
 
 	-- TODO: Do a proper areafill algorithm (BFS / DFS) to replace only the connected bodies of fluid,
-	-- instead of replacing everything in the area
+	-- instead of replacing everything in the area.
 
 	-- Push the area to Undo stack:
 	local State = GetPlayerState(a_Player)
 	State.UndoStack:PushUndoFromCuboid(World, Cuboid, "drain")
 
-	-- Process the area around the player using a cBlockArea:
+	-- Process the area around the player using a cBlockArea.
 	local BlockArea = cBlockArea()
 	BlockArea:Read(World, Cuboid)
 	local SizeX, SizeY, SizeZ = BlockArea:GetCoordRange()
 
-	-- The amount of changed blocks
+	-- The amount of changed blocks.
 	local NumBlocks = 0
 
 	for X = 0, SizeX do
@@ -57,20 +51,16 @@ function HandleDrainCommand(a_Split, a_Player)
 		end
 	end
 
-	-- Write the block area back into the world
+	-- Write the block area back into the world.
 	BlockArea:Write(World, Cuboid.p1)
 
-	-- Notify other plugins of the change
+	-- Notify other plugins of the change.
 	CallHook("OnAreaChanged", Cuboid, a_Player, World, "drain")
 
-	-- Send a message to the player with the amount of changed blocks
-	a_Player:SendMessage(cChatColor.LightPurple .. NumBlocks .. " block(s) changed.")
+	-- Send a message to the player with the amount of changed blocks.
+	a_Player:SendMessage(cChatColor.LightGreen .. "Modified " .. NumBlocks .. " block(s).")
 	return true
 end
-
-
-
-
 
 function HandleExtinguishCommand(a_Split, a_Player)
 	-- //extinguish <radius>
@@ -81,10 +71,10 @@ function HandleExtinguishCommand(a_Split, a_Player)
 	-- /ex <radius
 
 	if a_Split[2] == nil then
-		a_Player:SendMessage(cChatColor.Rose .. "usage: /ex [Radius]")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //extinguish <radius>")
 		return true
 	elseif tonumber(a_Split[2]) == nil then
-		a_Player:SendMessage(cChatColor.Rose .. 'Number expected; string "' .. a_Split[2] .. '" given')
+		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[2] .. ") given.")
 		return true
 	end
 
@@ -99,17 +89,13 @@ function HandleExtinguishCommand(a_Split, a_Player)
 	local NumAffectedBlocks = ReplaceBlocksInCuboid(a_Player, Cuboid, cMask:new("51"), GetBlockDst("0"), "extinguish")
 
 	-- Send a message to the player
-	a_Player:SendMessage(cChatColor.LightPurple .. NumAffectedBlocks .. " fire(s) put out")
+	a_Player:SendMessage(cChatColor.LightGreen .. "Extinguished " .. NumAffectedBlocks .. " fire(s).")
 	return true
 end
 
-
-
-
-
 function HandleGreenCommand(a_Split, a_Player)
 	if tonumber(a_Split[2]) == nil or a_Split[2] == nil then -- check if the player gave a radius
-		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.\n//green <radius>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <radius>")
 		return true
 	end
 
@@ -139,37 +125,32 @@ function HandleGreenCommand(a_Split, a_Player)
 		for idx, value in ipairs(PossibleBlockChanges) do
 			World:SetBlock(value.X, value.Y, value.Z, value.BlockType, 0)
 		end
-		a_Player:SendMessage(cChatColor.LightPurple .. #PossibleBlockChanges .. " surfaces greened.")
+		a_Player:SendMessage(cChatColor.LightGreen .. "Greened " .. #PossibleBlockChanges .. " surface(s).")
 	end
 	return true
 end
-
-
-
-
 
 function HandleFillrCommand(a_Split, a_Player)
 	-- //fillr <block> <radius> [depth] [allowUp]
 
 	if (#a_Split < 3) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too few parameters!");
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //fillr <block> <radius> [depth] [allowUp]");
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //fillr <block> <radius> [depth] [allowup]");
 		return true;
 	elseif (#a_Split > 5) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 6));
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //fillr <block> <radius> [depth] [allowUp]");
+--		a_Player:SendMessage(cChatColor.LightGray .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 6));
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //fillr <block> <radius> [depth] [allowup]");
 		return true;
 	end
 
 	local blockDst, errorBlock = GetBlockDst(a_Split[2]);
 	if (not blockDst) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown dst block type: '" .. errorBlock .. "'.");
+		a_Player:SendMessage(cChatColor.Rose .. "Couldn't find that block (" .. errorBlock .. ").");
 		return true;
 	end
 
 	local radius = tonumber(a_Split[3]);
 	if (not radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[3] .. "\" given.")
+		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[3] .. ") given.")
 		return true
 	end
 	radius = math.floor(radius)
@@ -178,7 +159,7 @@ function HandleFillrCommand(a_Split, a_Player)
 	if (a_Split[4]) then
 		depth = tonumber(a_Split[4]);
 		if (not depth) then
-			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[4] .. "\" given.")
+			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[4] .. ") given.")
 			return true
 		end
 	end
@@ -188,7 +169,7 @@ function HandleFillrCommand(a_Split, a_Player)
 		if (a_Split[5]:lower() == "false") then
 			allowUp = false
 		elseif (a_Split[5]:lower() ~= "true") then
-			a_Player:SendMessage(cChatColor.Rose .. "Boolean expected; string \"" .. a_Split[5] .. "\" given.")
+			a_Player:SendMessage(cChatColor.Rose .. "Boolean expected; string (" .. a_Split[5] .. ") given.")
 			return true
 		end
 	end
@@ -201,36 +182,31 @@ function HandleFillrCommand(a_Split, a_Player)
 
 	local numBlocks = FillRecursively(a_Player, region, blockDst, allowUp)
 
-	a_Player:SendMessage(cChatColor.LightPurple .. numBlocks .. " blocks have changed")
+	a_Player:SendMessage(cChatColor.LightGreen .. "Modified " .. numBlocks .. " block(s).")
 	return true;
 end
-
-
-
-
 
 function HandleFillCommand(a_Split, a_Player)
 	-- //fill <block> <radius> [depth]
 
 	if (#a_Split < 3) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too few parameters!");
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //fill <block> <radius> [depth]");
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //fill <block> <radius> [depth]");
 		return true;
 	elseif (#a_Split > 4) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 5));
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //fill <block> <radius> [depth]");
+--		a_Player:SendMessage(cChatColor.LightGray .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 5));
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //fill <block> <radius> [depth]");
 		return true;
 	end
 
 	local blockDst, errorBlock = GetBlockDst(a_Split[2]);
 	if (not blockDst) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown dst block type: '" .. errorBlock .. "'.");
+		a_Player:SendMessage(cChatColor.Rose .. "Couldn't find that block (" .. errorBlock .. ").");
 		return true;
 	end
 
 	local radius = tonumber(a_Split[3]);
 	if (not radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[3] .. "\" given.")
+		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[3] .. ") given.")
 		return true
 	end
 	radius = math.floor(radius)
@@ -239,7 +215,7 @@ function HandleFillCommand(a_Split, a_Player)
 	if (a_Split[4]) then
 		depth = tonumber(a_Split[4]);
 		if (not depth) then
-			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[4] .. "\" given.")
+			a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[4] .. ") given.")
 			return true
 		end
 	end
@@ -252,43 +228,38 @@ function HandleFillCommand(a_Split, a_Player)
 
 	local numBlocks = FillNormal(a_Player, region, blockDst)
 
-	a_Player:SendMessage(cChatColor.LightPurple .. numBlocks .. " blocks have changed")
+	a_Player:SendMessage(cChatColor.LightGreen .. "Modified " .. numBlocks .. " block(s).")
 	return true;
 end
-
-
-
-
 
 function HandleReplaceNearCommand(a_Split, a_Player)
 	-- //replacenear <size> <from> <to>
 
 	if (#a_Split < 4) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too few parameters!")
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //replacenear <size> <from> <to>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //replacenear <size> <src block> <dst block>")
 		return true
 	elseif (#a_Split > 4) then
-		a_Player:SendMessage(cChatColor.Rose .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 5))
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //replacenear <size> <from> <to>")
+--		a_Player:SendMessage(cChatColor.LightGray .. "Too many parameters! Unused parameters: " .. table.concat(a_Split, " ", 5))
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //replacenear <size> <src block> <dst block>")
 		return true
 	end
 
 	local Radius = tonumber(a_Split[2])
 	if (not Radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string \"" .. a_Split[2] .. "\" given.")
+		a_Player:SendMessage(cChatColor.Rose .. "Number expected; string (" .. a_Split[2] .. ") given.")
 		return true
 	end
 
 	-- Retrieve the blocktypes from the params:
 	local SrcBlockTable, ErrBlock = cMask:new(a_Split[3])
 	if (not SrcBlockTable) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown src block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.Rose .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
 	local DstBlockTable, ErrBlock = GetBlockDst(a_Split[4], a_Player)
 	if (not DstBlockTable) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown dst block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.Rose .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
@@ -298,18 +269,14 @@ function HandleReplaceNearCommand(a_Split, a_Player)
 	Cuboid:Sort()
 
 	local NumBlocks = ReplaceBlocksInCuboid(a_Player, Cuboid, SrcBlockTable, DstBlockTable, "replacenear")
-	a_Player:SendMessage(cChatColor.LightPurple .. NumBlocks .. " block(s) have been changed.")
+	a_Player:SendMessage(cChatColor.LightGreen .. "Modified " .. NumBlocks .. " block(s).")
 
 	return true
 end
 
-
-
-
-
 function HandleSnowCommand(a_Split, a_Player)
 	if tonumber(a_Split[2]) == nil or a_Split[2] == nil then -- check if the player gave a radius
-		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.\n//snow <radius>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //snow <radius>")
 		return true
 	end
 
@@ -345,18 +312,14 @@ function HandleSnowCommand(a_Split, a_Player)
 		for idx, value in ipairs(PossibleBlockChanges) do
 			World:SetBlock(value.X, value.Y, value.Z, value.BlockType, 0)
 		end
-		a_Player:SendMessage(cChatColor.LightPurple .. #PossibleBlockChanges .. " surfaces covered. Let is snow~")
+		a_Player:SendMessage(cChatColor.LightGreen .. "Covered " .. #PossibleBlockChanges .. " surface(s).")
 	end
 	return true
 end
 
-
-
-
-
 function HandleThawCommand(a_Split, a_Player)
 	if tonumber(a_Split[2]) == nil or a_Split[2] == nil then -- check if the player gave a radius
-		a_Player:SendMessage(cChatColor.Rose .. "Too few arguments.\n//thaw <radius>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //thaw <radius>")
 		return true
 	end
 
@@ -388,22 +351,17 @@ function HandleThawCommand(a_Split, a_Player)
 		for idx, value in ipairs(PossibleBlockChanges) do
 			World:SetBlock(value.X, value.Y, value.Z, value.BlockType, 0)
 		end
-		a_Player:SendMessage(cChatColor.LightPurple .. #PossibleBlockChanges .. "  surfaces thawed")
+		a_Player:SendMessage(cChatColor.LightGreen .. "Thawed " .. #PossibleBlockChanges .. "  surface(s).")
 	end
 	return true
 end
-
-
-
-
-
 
 function HandlePumpkinsCommand(a_Split, a_Player)
 	-- /pumpkins [Radius]
 
 	local Radius = not a_Split[2] and 10 or tonumber(a_Split[2])
 	if (not Radius) then
-		a_Player:SendMessage(cChatColor.Rose .. "invaild argument")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: //pumpkins <radius>")
 		return true
 	end
 
@@ -450,14 +408,10 @@ function HandlePumpkinsCommand(a_Split, a_Player)
 		for idx, value in ipairs(PossibleBlockChanges) do
 			World:SetBlock(value.X, value.Y, value.Z, value.BlockType, value.BlockMeta)
 		end
-		a_Player:SendMessage(cChatColor.LightPurple .. #PossibleBlockChanges .. " pumpkin patches created")
+		a_Player:SendMessage(cChatColor.LightGreen .. "Created " .. #PossibleBlockChanges .. " pumpkin patch(es).")
 	end
 	return true
 end
-
-
-
-
 
 function HandleRemoveColumnCommand(a_Split, a_Player)
 	-- /removeabove
@@ -468,7 +422,7 @@ function HandleRemoveColumnCommand(a_Split, a_Player)
 	-- Try to determine the world height at this column:
 	local IsValid, WorldHeight = a_Player:GetWorld():TryGetHeight(Pos.x, Pos.z)
 	if not(IsValid) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "0 block(s) have been removed.")
+		a_Player:SendMessage(cChatColor.LightGreen .. "Removed 0 block(s).")
 		return true
 	end
 
@@ -496,6 +450,6 @@ function HandleRemoveColumnCommand(a_Split, a_Player)
 	CallHook("OnAreaChanged", Cuboid, a_Player, World, a_Split[1]:sub(3, -1))
 
 	local ChangedBlocks = Cuboid.p2.y - Cuboid.p1.y
-	a_Player:SendMessage(cChatColor.LightPurple .. ChangedBlocks .. " block(s) have been removed.")
+	a_Player:SendMessage(cChatColor.LightGreen .. "Removed " .. ChangedBlocks .. " block(s).")
 	return true
 end

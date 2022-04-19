@@ -408,7 +408,7 @@ function GetBlockDst(a_Blocks, a_Player)
 		return false, Error
 	end
 
-	if (a_Player and not a_Player:HasPermission("worldedit.anyblock")) then
+	if (a_Player and not a_Player:HasPermission("edits.anyblock")) then
 		local DoesContain, DisallowedBlock = Handler:Contains(g_Config.Limits.DisallowedBlocks)
 		if (DoesContain) then
 			return false, DisallowedBlock .. " isn't allowed"
@@ -773,7 +773,7 @@ function RightClickCompass(a_Player)
 	cLineBlockTracer.Trace(World, Callbacks, Start, End)
 
 	if (not FreeSpot) then
-		a_Player:SendMessage(cChatColor.Rose .. "Nothing to pass through!")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find anything to pass through.")
 		return false
 	end
 
@@ -829,7 +829,7 @@ function LeftClickCompass(a_Player)
 		if (g_Config.NavigationWand.TeleportNoHit) then
 			a_Player:TeleportToCoords(End.x + 0.5, End.y, End.z + 0.5)
 		else
-			a_Player:SendMessage(cChatColor.Rose .. "No block in sight (or too far)!")
+			a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find anything in sight.")
 		end
 
 		return g_Config.NavigationWand.TeleportNoHit

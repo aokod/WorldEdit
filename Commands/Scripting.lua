@@ -1,26 +1,21 @@
 
--- Scripting.lua
+-- scripting.lua
+-- Handlers for scripting-related commands.
 
--- Contains command handlers that are in the Scripting category.
-
-
-
-
-
--- Loads and executes a craftscript
+-- Loads and executes a craftscript.
 function HandleCraftScriptCommand(a_Split, a_Player)
-	-- /cs <scriptname>
+	-- /script <script>
 
 	local PlayerState = GetPlayerState(a_Player)
 
 	if (not a_Split[2]) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: /cs <scriptname>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <script>")
 		return true
 	end
 
 	local Succes, Err = PlayerState.CraftScript:SelectScript(a_Split[2])
 	if (not Succes) then
-		a_Player:SendMessage(cChatColor.Rose .. Err)
+		a_Player:SendMessage(cChatColor.LightGray .. Err)
 		return true
 	end
 
@@ -29,21 +24,17 @@ function HandleCraftScriptCommand(a_Split, a_Player)
 
 	local Succes, Err = PlayerState.CraftScript:Execute(a_Player, Arguments)
 	if (not Succes) then
-		a_Player:SendMessage(cChatColor.Rose .. Err)
+		a_Player:SendMessage(cChatColor.LightGray .. Err)
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Script executed.")
+	a_Player:SendMessage(cChatColor.LightGray .. "Executed that script.")
 	return true
 end
 
-
-
-
-
 -- Executes the last used craftscript.
 function HandleLastCraftScriptCommand(a_Split, a_Player)
-	-- /.s
+	-- /ls
 
 	local PlayerState = GetPlayerState(a_Player)
 
@@ -52,10 +43,10 @@ function HandleLastCraftScriptCommand(a_Split, a_Player)
 
 	local Succes, Err = PlayerState.CraftScript:Execute(a_Player, Arguments)
 	if (not Succes) then
-		a_Player:SendMessage(cChatColor.Rose .. Err)
+		a_Player:SendMessage(cChatColor.LightGray .. Err)
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.Rose .. "Script Executed")
+	a_Player:SendMessage(cChatColor.LightGray .. "Executed that script.")
 	return true
 end

@@ -1,11 +1,5 @@
-
--- Selection.lua
-
--- Implements handlers for the selection-related commands
-
-
-
-
+-- selection.lua
+-- Implements handlers for selection-related commands.
 
 function HandleChunkCommand(a_Split, a_Player)
 	-- //chunk
@@ -18,56 +12,48 @@ function HandleChunkCommand(a_Split, a_Player)
 	local MaxX = MinX + 15
 	local MaxZ = MinZ + 15
 
-	-- Update selection.
+	-- Update the selection.
 	local State = GetPlayerState(a_Player)
 	State.Selection:SetFirstPoint(MinX, 0, MinZ)
 	State.Selection:SetSecondPoint(MaxX, 255, MaxZ)
 
 	-- Notify the player about the selection.
 	State.Selection:NotifySelectionChanged()
-	a_Player:SendMessage(cChatColor.LightPurple .. "Chunk selected: " .. ChunkX .. ", " .. ChunkZ)
+	a_Player:SendMessage(cChatColor.LightGray .. "Selected a chunk at X: " .. ChunkX .. ", Y: " .. ChunkZ .. ".")
 
 	return true
 end
-
-
-
-
 
 function HandleCountCommand(a_Split, a_Player)
 	-- //count <blocktype>
 
 	local State = GetPlayerState(a_Player)
 
-	-- Check the selection:
+	-- Check the selection...
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No region set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
-	-- Check the params:
+	-- Check the params...
 	if (a_Split[2] == nil) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //count <BlockType>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <block>")
 		return true
 	end
 
-	-- Retrieve the blocktypes from the params:
+	-- Retrieve the blocktypes from the params.
 	local Mask, ErrBlock = cMask:new(a_Split[2])
 	if not(Mask) then
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown block type: '" .. ErrBlock .. "'.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that block (" .. ErrBlock .. ").")
 		return true
 	end
 
-	-- Count the blocks:
+	-- Count the blocks.
 	local NumBlocks = CountBlocksInCuboid(a_Player:GetWorld(), State.Selection:GetSortedCuboid(), Mask)
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Counted: " .. NumBlocks)
+	a_Player:SendMessage(cChatColor.LightGray .. "Counted " .. NumBlocks .. " block(s).")
 	return true
 end
-
-
-
-
 
 function HandleDeselectCommand(a_Split, a_Player)
 	-- //desel
@@ -75,23 +61,19 @@ function HandleDeselectCommand(a_Split, a_Player)
 	local State = GetPlayerState(a_Player)
 	State.Selection:Deselect()
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Selection cleared.")
+	a_Player:SendMessage(cChatColor.LightGray .. "Deselected your region.")
 	return true
 end
-
-
-
-
 
 function HandleDistrCommand(a_Split, a_Player)
 	-- //distr
 
 	-- TODO: -d option that separates data values.
 
-	-- Check the selection:
+	-- Check the selection...
 	local State = GetPlayerState(a_Player)
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No selection set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
@@ -124,12 +106,12 @@ function HandleDistrCommand(a_Split, a_Player)
 	table.sort(SortedBlockCounts, function(Block1, Block2) return Block1.Count < Block2.Count end)
 
 	-- Display them.
-	a_Player:SendMessage(cChatColor.LightPurple .. "# total blocks: " .. TotalCount)
+	a_Player:SendMessage(cChatColor.LightGray .. "Counted " .. TotalCount .. " block(s).")
 	for _, Block in ipairs(SortedBlockCounts) do
 		local BlockName = ItemTypeToString(Block.Type)
 		local Perc = 100 * Block.Count / TotalCount
 		local Line = string.format("% 7d (%.3f%%) %s #%d", Block.Count, Perc, BlockName, Block.Type)
-		a_Player:SendMessage(cChatColor.LightPurple .. Line)
+		a_Player:SendMessage(cChatColor.LightGray .. Line)
 	end
 
 	return true
@@ -140,13 +122,13 @@ end
 
 
 function HandleExpandContractCommand(a_Split, a_Player)
-	-- //expand [Amount] [Direction]
-	-- //contract [Amount] [Direction]
+	-- //expand [amount] [direction]
+	-- //contract [amount] [direction]
 
-	-- Check the selection:
+	-- Check the selection...
 	local State = GetPlayerState(a_Player)
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No region set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
@@ -155,13 +137,14 @@ function HandleExpandContractCommand(a_Split, a_Player)
 		State.Selection.Cuboid.p2.y = 255
 		State.Selection:NotifySelectionChanged()
 
-		a_Player:SendMessage(cChatColor.LightPurple .. "Expanded the selection from top to bottom.")
-		a_Player:SendMessage(cChatColor.LightPurple .. "Selection is now " .. State.Selection:GetSizeDesc())
+--		a_Player:SendMessage(cChatColor.LightGray .. "Expanded your region from top to bottom; counted " .. State.Selection:GetSizeDesc() .. " block(s).")
+		a_Player:SendMessage(cChatColor.LightGray .. "Expanded your region from top to bottom.")
+		a_Player:SendMessage(cChatColor.LightGray .. "Size: " .. State.Selection:GetSizeDesc() .. ".")
 		return true
 	end
 
 	if (a_Split[2] ~= nil) and (tonumber(a_Split[2]) == nil) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: " .. a_Split[1] .. " [Blocks] [Direction]")
+		a_Player:SendMessage(cChatColor.Rose .. "Usage: " .. a_Split[1] .. " [amount] [direction]")
 		return true
 	end
 
@@ -235,7 +218,7 @@ function HandleExpandContractCommand(a_Split, a_Player)
 		SubMinY = NumBlocks
 		SubMinZ = NumBlocks
 	else
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown direction \"" .. Direction .. "\".")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that direction (" .. Direction .. ").")
 		return true
 	end
 
@@ -245,67 +228,56 @@ function HandleExpandContractCommand(a_Split, a_Player)
 		SubMinZ, AddMaxZ = -AddMaxZ, -SubMinZ
 	end
 
-	-- Expand or contract the region
+	-- Expand or contract the region.
 	State.Selection:Expand(SubMinX, SubMinY, SubMinZ, AddMaxX, AddMaxY, AddMaxZ)
-	a_Player:SendMessage(cChatColor.LightPurple .. a_Split[1]:sub(3, -1):ucfirst() .. "ed the selection.")
-	a_Player:SendMessage(cChatColor.LightPurple .. "Selection is now " .. State.Selection:GetSizeDesc())
+--	a_Player:SendMessage(cChatColor.LightGray .. a_Split[1]:sub(3, -1):ucfirst() .. "ed your region; counted " .. State.Selection:GetSizeDesc() .. ".")
+	a_Player:SendMessage(cChatColor.LightGray .. a_Split[1]:sub(3, -1):ucfirst() .. "ed your region.")
+	a_Player:SendMessage(cChatColor.LightGray .. "Size: " .. State.Selection:GetSizeDesc() .. ".")
 	return true
 end
-
-
-
-
 
 function HandleHPosCommand(a_Split, a_Player)
 	-- //hpos1
 	-- //hpos2
 
-	-- Get the block the player is looking at
+	-- Get the block the player is looking at.
 	local TargetBlock, BlockFace = GetTargetBlock(a_Player)
 	if (not TargetBlock) then
 		return true
 	end
 
-	-- Determine the name of the point. If the command is //pos1 then "First", otherwise it's the second point
+	-- Determine the name of the point. If the command is //pos1 then "First", otherwise it's the second point.
 	local PointName = (a_Split[1] == "//hpos1") and "First" or "Second"
 
 	local State = GetPlayerState(a_Player)
 
-	-- Select the block:
+	-- Select the block.
 	local Succes, Msg = State.Selection:SetPos(TargetBlock.x, TargetBlock.y, TargetBlock.z, BlockFace, PointName)
-	a_Player:SendMessage(Msg)
+	a_Player:SendMessage(cChatColor.LightGray .. Msg)
 	return true
 end
-
-
-
-
 
 function HandlePosCommand(a_Split, a_Player)
 	-- //pos1
 	-- //pos2
 
-	-- Determine the name of the point. If the command is //pos1 then "First", otherwise it's the second point
+	-- Determine the name of the point. If the command is //pos1 then "First", otherwise it's the second point.
 	local PointName = (a_Split[1] == "//pos1") and "First" or "Second"
 	local State = GetPlayerState(a_Player)
 	local Pos = a_Player:GetPosition():Floor()
 	local Succes, Msg = State.Selection:SetPos(Pos.x, Pos.y, Pos.z, BLOCK_FACE_TOP, PointName, true)
 
-	-- We can assume that the action was a succes, since all the given parameters are known to be valid.
-	a_Player:SendMessage(cChatColor.LightPurple .. Msg)
+	-- We can assume that the action was a success since all the given parameters are known to be valid.
+	a_Player:SendMessage(cChatColor.LightGray .. Msg)
 	return true
 end
-
-
-
-
 
 function HandleSaveLoadSelectionCommand(a_Split, a_Player)
 	-- //savesel <name>
 	-- //loadsel <name>
 
 	if (not a_Split[2]) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: " .. a_Split[1] .. " <name>")
+		a_Player:SendMessage(cChatColor.LightGray .. "Usage: " .. a_Split[1] .. " <name>")
 		return true
 	end
 
@@ -320,30 +292,27 @@ function HandleSaveLoadSelectionCommand(a_Split, a_Player)
 	end
 
 	if (not Success) then
-		a_Player:SendMessage(cChatColor.Rose .. ErrMsg)
+		a_Player:SendMessage(cChatColor.LightGray .. ErrMsg)
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Selection " .. ((a_Split[1] == "//loadsel") and "loaded" or "saved"))
+	a_Player:SendMessage(cChatColor.LightGray .. ((a_Split[1] == "//loadsel") and "Loaded" or "Saved") .. " your region.")
 	return true
 end
 
-
-
-
-
 function HandleShiftCommand(a_Split, a_Player)
-	-- //shift [Amount] [Direction]
+	-- //shift [amount] [direction]
 
-	-- Check the selection:
+	-- Check the selection...
 	local State = GetPlayerState(a_Player)
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No region set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
+	-- Check the params...
 	if (a_Split[2] ~= nil) and (tonumber(a_Split[2]) == nil) then
-		a_Player:SendMessage(cChatColor.Rose .. "Usage: //shift [Blocks] [Direction]")
+		a_Player:SendMessage(cChatColor.Rose .. "Usage: " .. a_Split[1] .. " [amount] [direction]")
 		return true
 	end
 
@@ -405,18 +374,14 @@ function HandleShiftCommand(a_Split, a_Player)
 			X = NumBlocks
 		end
 	else
-		a_Player:SendMessage(cChatColor.Rose .. "Unknown direction \"" .. Direction .. "\".")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find that direction (" .. Direction .. ").")
 		return true
 	end
 
 	State.Selection:Move(X, Y, Z)
-	a_Player:SendMessage(cChatColor.LightPurple .. "Region shifted.")
+	a_Player:SendMessage(cChatColor.LightGray .. "Shifted your region.")
 	return true
 end
-
-
-
-
 
 function HandleShrinkCommand(a_Split, a_Player)
 	-- //shrink
@@ -424,7 +389,7 @@ function HandleShrinkCommand(a_Split, a_Player)
 	local State = GetPlayerState(a_Player)
 
 	if not(State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.Rose .. "No region set")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
@@ -433,30 +398,26 @@ function HandleShrinkCommand(a_Split, a_Player)
 	BlockArea:Read(a_Player:GetWorld(), SrcCuboid)
 	local MinRelX, MinRelY, MinRelZ, MaxRelX, MaxRelY, MaxRelZ = BlockArea:GetNonAirCropRelCoords()
 
-	-- Set the new points. This will not take the previous points in account. (For example p1 and p2 could get switched)
+	-- Set the new points. This will not take the previous points in account. (For example, p1 and p2 could get switched.)
 	State.Selection:SetFirstPoint(SrcCuboid.p1.x + MinRelX, SrcCuboid.p1.y + MinRelY, SrcCuboid.p1.z + MinRelZ)
 	State.Selection:SetSecondPoint(SrcCuboid.p1.x + MaxRelX, SrcCuboid.p1.y + MaxRelY, SrcCuboid.p1.z + MaxRelZ)
 
-	-- Send the change of the selection to the client
+	-- Send the change of the selection to the client.
 	State.Selection:NotifySelectionChanged()
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "Region shrunk")
+	a_Player:SendMessage(cChatColor.LightGray .. "Shrunk your region.")
 	return true
 end
-
-
-
-
 
 function HandleSizeCommand(a_Split, a_Player)
 	-- //size
 
 	local State = GetPlayerState(a_Player)
 	if (not State.Selection:IsValid()) then
-		a_Player:SendMessage(cChatColor.LightPurple .. "Please select a region first")
+		a_Player:SendMessage(cChatColor.LightGray .. "Couldn't find a valid region.")
 		return true
 	end
 
-	a_Player:SendMessage(cChatColor.LightPurple .. "The selection size is " .. State.Selection:GetSizeDesc() .. ".")
+	a_Player:SendMessage(cChatColor.LightPurple .. "Size: " .. State.Selection:GetSizeDesc() .. ".")
 	return true
 end
