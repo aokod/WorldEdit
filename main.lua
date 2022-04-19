@@ -2,11 +2,11 @@
 -- Implements the plugin's main entrypoint.
 
 -- Load the library expansions.
-dofolder(cPluginManager:GetCurrentPlugin():GetLocalFolder() .. "/LibrariesExpansion")
+dofolder(cPluginManager:GetCurrentPlugin():GetLocalFolder() .. "/libraries")
 
 g_ExcludedFolders = table.todictionary{
 	"craftscripts",
-	"LibrariesExpansion",
+	"libraries",
 	".",
 	"..",
 }
